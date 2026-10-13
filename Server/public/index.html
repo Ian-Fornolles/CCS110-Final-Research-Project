@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UNITY - Internet Cafe Management System</title>
+  <link rel="icon" href="data:,">
+<style>
+  /* ===== Base ===== */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; font: 11px Tahoma, Verdana, Geneva, sans-serif; color: #000; user-select: none; }
+input, select, button { font: inherit; }
+input, select { user-select: text; }
+.hidden { display: none !important; }
+
+::-webkit-scrollbar { width: 17px; height: 17px; }
+::-webkit-scrollbar-track { background: #f3f1e7; border-left: 1px solid #e4e1d3; }
+::-webkit-scrollbar-thumb { background: linear-gradient(90deg, #c1d3fb, #8aaaf3 50%, #c1d3fb); border: 1px solid #7a96df; border-radius: 3px; }
+::-webkit-scrollbar-button { background: linear-gradient(#c1d3fb, #8aaaf3); border: 1px solid #7a96df; border-radius: 3px; height: 17px; width: 17px; }
+::-webkit-scrollbar-corner { background: #ece9d8; }
+
+/* ===== Logo ===== */
+.logo { display: flex; align-items: center; gap: 12px; }
+.flag { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 56px; height: 56px; transform: rotate(-8deg) skewX(-6deg); }
+.flag i { border-radius: 3px 12px 3px 12px; }
+.flag i:nth-child(1) { background: #f35325; }
+.flag i:nth-child(2) { background: #81bc06; }
+.flag i:nth-child(3) { background: #05a6f0; }
+.flag i:nth-child(4) { background: #ffba08; }
+.lt { display: flex; flex-direction: column; text-align: left; }
+.lt .u { font: italic bold 46px Tahoma, Verdana, sans-serif; letter-spacing: -1px; color: #fff; }
+.lt small { font-size: 12px; color: #cfd8ff; }
+.logo.small .flag { width: 26px; height: 26px; gap: 2px; }
+.logo.small .lt .u { font-size: 22px; }
+
+/* ===== Desktop ===== */
+#desktop {
+  position: fixed; inset: 0 0 30px 0; overflow: hidden;
+  background:
+    radial-gradient(ellipse 28% 9% at 22% 22%, rgba(255,255,255,.85), transparent 70%),
+    radial-gradient(ellipse 22% 7% at 62% 15%, rgba(255,255,255,.8), transparent 70%),
+    radial-gradient(ellipse 18% 6% at 85% 30%, rgba(255,255,255,.7), transparent 70%),
+    radial-gradient(ellipse 90% 42% at 25% 112%, #78b72a 0 62%, transparent 63%),
+    radial-gradient(ellipse 110% 38% at 85% 118%, #4f9418 0 62%, transparent 63%),
+    radial-gradient(ellipse 130% 30% at 50% 108%, #a6d24b 0 55%, transparent 56%),
+    linear-gradient(#1c5cc9 0%, #3f87e6 40%, #8dc0f4 62%, #d4ebfb 75%);
+}
+.icons { position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 14px; }
+.dicon { width: 76px; text-align: center; color: #fff; text-shadow: 1px 1px 2px #000; cursor: default; padding: 3px; outline: none; border: 1px dotted transparent; }
+.dicon span { display: block; font-size: 34px; margin-bottom: 2px; filter: drop-shadow(1px 2px 1px rgba(0,0,0,.5)); }
+.dicon:focus, .dicon:hover { background: rgba(49,106,197,.55); border-color: #fff; }
+
+/* ===== Windows ===== */
+.window { background: #0831d9; border: 1px solid #0831d9; border-radius: 8px 8px 0 0; padding: 0 3px 3px; box-shadow: 2px 3px 12px rgba(0,0,0,.55); }
+.titlebar {
+  height: 29px; display: flex; align-items: center; justify-content: space-between; margin: 0 -3px; padding: 0 4px 0 9px;
+  color: #fff; font: bold 13px Tahoma, sans-serif; text-shadow: 1px 1px #0f1089; border-radius: 7px 7px 0 0;
+  background: linear-gradient(#0997ff 0, #0053ee 8%, #0050ee 40%, #06f 88%, #06f 93%, #005bff 95%, #003dd7 96%, #003dd7 100%);
+}
+.titlebar .tt { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tbtns { display: flex; gap: 2px; }
+.tb { width: 21px; height: 21px; padding: 0; border: 1px solid #fff; border-radius: 3px; color: #fff; font-weight: bold; font-size: 11px; line-height: 1; cursor: pointer; background: radial-gradient(circle at 30% 30%, #7da6ff, #2a62e8 60%, #1a47c4); }
+.tb:hover { filter: brightness(1.15); }
+.tb.close { background: radial-gradient(circle at 30% 30%, #f5a58e, #e04a2a 60%, #b32a10); }
+.wbody { background: #ece9d8; }
+
+#appWindow { position: absolute; top: 10px; bottom: 10px; left: 50%; transform: translateX(-50%); width: min(1240px, calc(100% - 40px)); display: flex; flex-direction: column; }
+#appWindow.max { top: 0; bottom: 0; left: 0; transform: none; width: 100%; border-radius: 0; }
+.appbody { flex: 1; display: flex; min-height: 0; }
+.maincol { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; margin: 4px 0 4px 4px; }
+#content { flex: 1; overflow: auto; background: #fff; border: 1px solid #7f9db9; margin: 0; min-height: 0; }
+
+.searchbar { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #ece9d8; border: 1px solid #7f9db9; border-bottom: 0; }
+.searchbar label { font-weight: bold; color: #215dc6; }
+#searchBox { flex: 1; max-width: 420px; padding: 3px 5px; border: 1px solid #7f9db9; background: #fff; }
+#searchBox:focus { outline: none; border-color: #316ac5; box-shadow: 0 0 0 1px #316ac5; }
+mark { background: #ffe58a; color: inherit; padding: 0 1px; }
+.statusbar { display: flex; justify-content: space-between; padding: 3px 8px; background: #ece9d8; border-top: 1px solid #fff; color: #222; }
+
+/* ===== Sidebar ===== */
+#nav { width: 200px; padding: 10px; margin: 4px; display: flex; flex-direction: column; background: linear-gradient(#7ba2e7, #6375d6); border-radius: 4px; }
+#nav .logo { margin-bottom: 6px; padding: 4px 2px; }
+.who { word-break: break-word; background: rgba(255,255,255,.88); border-radius: 4px; padding: 6px 8px; margin-bottom: 12px; color: #215dc6; line-height: 1.5; }
+.navbtn { display: block; width: 100%; text-align: left; padding: 9px 10px; margin-bottom: 7px; border: 0; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; color: #215dc6; background: linear-gradient(90deg, #fff, #c6d3f7); }
+.navbtn:hover { color: #428eff; text-decoration: underline; }
+.navbtn.active { background: linear-gradient(90deg, #fff, #ffe5a0); color: #1d3f9e; box-shadow: inset 0 0 0 1px #e0b040; }
+
+/* ===== Pages ===== */
+.page { padding: 14px 16px; }
+.ph { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7ba2e7; margin-bottom: 12px; padding-bottom: 6px; }
+.ph h2 { margin: 0; font: bold 18px Tahoma, sans-serif; color: #215dc6; }
+.acts { display: flex; gap: 6px; }
+h3 { margin: 16px 0 6px; font-size: 13px; color: #215dc6; }
+.h3row { display: flex; justify-content: space-between; align-items: baseline; }
+.h3row .total { color: #003399; font-weight: bold; }
+
+.stats { display: grid; grid-template-columns: repeat(5, 1fr) 1.6fr; gap: 8px; }
+.stat { border: 1px solid #919b9c; border-radius: 4px; padding: 10px 6px; text-align: center; background: linear-gradient(#fff, #f2f1ea); }
+.stat b { display: block; font-size: 24px; color: #003399; margin-bottom: 2px; }
+.stat.clock b { font-size: 14px; margin-top: 6px; line-height: 1.3; }
+
+.pcgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.pc { border: 1px solid #919b9c; border-top: 4px solid #888; border-radius: 3px; padding: 8px; text-align: center; cursor: pointer; background: #fff; }
+.pc:hover { background: #f1f6ff; }
+.pc.sel { outline: 2px solid #316ac5; background: #e1eaff; }
+.pc .ico { font-size: 30px; }
+.pc small { display: block; color: #555; }
+.pc.Available { border-top-color: #2e8b0e; }
+.pc.Occupied { border-top-color: #c00; }
+.pc.Reserved { border-top-color: #d78a00; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 9px; color: #fff; font-weight: bold; }
+.pc .badge { margin-top: 4px; }
+.badge.Available { background: #2e8b0e; }
+.badge.Occupied { background: #c00; }
+.badge.Reserved { background: #d78a00; }
+
+.gridwrap { border: 1px solid #7f9db9; overflow: auto; max-height: 340px; }
+.gridwrap.tall { max-height: none; }
+table { border-collapse: collapse; width: 100%; }
+th { position: sticky; top: 0; text-align: left; padding: 4px 8px; background: linear-gradient(#fff, #ebe9ed 85%, #d6d2c2); border: 1px solid #d6d2c2; font-weight: normal; }
+td { padding: 4px 8px; border-bottom: 1px solid #eee; white-space: nowrap; }
+tr:hover td { background: #e1eaff; }
+.empty { padding: 16px; color: #666; text-align: center; }
+
+/* ===== Buttons ===== */
+.xp-btn { min-width: 75px; padding: 3px 10px; border: 1px solid #003c74; border-radius: 3px; cursor: pointer; color: #000; background: linear-gradient(#fff, #ecebe5 86%, #d8d0c4); }
+.xp-btn:hover { box-shadow: inset 0 0 0 2px #fcc349; }
+.xp-btn:active { background: linear-gradient(#cdcac3, #e3e3db 20%); }
+.xp-btn.default { box-shadow: inset 0 0 0 2px #98b8ea; }
+.xp-btn.default:hover { box-shadow: inset 0 0 0 2px #fcc349; }
+.xp-btn.sm { min-width: 0; padding: 1px 8px; }
+.xp-btn.big { padding: 16px 22px; font-size: 13px; min-width: 170px; }
+
+/* ===== Modals ===== */
+.overlay { position: fixed; inset: 0 0 30px 0; z-index: 500; display: flex; align-items: center; justify-content: center; background: rgba(0,0,40,.22); }
+.modal { max-width: 96vw; max-height: calc(100vh - 50px); display: flex; flex-direction: column; }
+.modal .wbody { overflow: auto; }
+.mbody { padding: 14px 16px 6px; }
+.mbody.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.mfoot { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px 14px; }
+.msg { display: flex; gap: 14px; align-items: flex-start; }
+.msg .mi { font-size: 32px; }
+.msg p { margin: 6px 0; font-size: 12px; line-height: 1.5; white-space: pre-line; }
+.chooser { display: flex; gap: 12px; justify-content: center; padding: 6px 0 10px; }
+.login-head { background: linear-gradient(#245edb, #3f8cf3); margin: -14px -16px 12px; padding: 12px 16px; display: flex; justify-content: center; }
+.loginerr { background: #fff0f0; border: 1px solid #d00; color: #a00; padding: 6px 8px; margin-bottom: 8px; border-radius: 3px; }
+.hint { margin-bottom: 8px; color: #444; line-height: 1.4; }
+dl.view { display: grid; grid-template-columns: 130px 1fr; gap: 6px 10px; margin: 0; font-size: 12px; }
+dl.view dt { font-weight: bold; color: #215dc6; }
+dl.view dd { margin: 0; }
+.bill { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 12px; padding: 8px 10px; background: #fff; border: 1px solid #7f9db9; font-size: 15px; font-weight: bold; color: #003399; }
+
+/* ===== Forms ===== */
+.field { margin-bottom: 9px; }
+.field label { display: block; margin-bottom: 3px; }
+.field input, .field select { width: 100%; padding: 4px 5px; border: 1px solid #7f9db9; background: #fff; border-radius: 0; }
+.field input:focus, .field select:focus { outline: none; border-color: #316ac5; box-shadow: 0 0 0 1px #316ac5; }
+.field .err { display: none; color: #d00; font-size: 10px; margin-top: 2px; }
+.field.invalid input, .field.invalid select { border: 1px solid #f00; box-shadow: 0 0 5px rgba(255,0,0,.6); }
+.field.invalid label { color: #e00; font-weight: bold; text-shadow: 0 0 6px #f00, 0 0 2px #f66; }
+.field.invalid .err { display: block; }
+
+/* ===== Start menu & taskbar ===== */
+#startMenu { position: fixed; left: 0; bottom: 30px; width: 280px; z-index: 900; border: 1px solid #0831d9; border-radius: 8px 8px 0 0; overflow: hidden; box-shadow: 3px -2px 10px rgba(0,0,0,.5); background: #fff; }
+.sm-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px; color: #fff; font-size: 14px; background: linear-gradient(#1868d8, #4a96f0 10%, #1458c8); }
+.avatar { font-size: 26px; background: #fff; border: 2px solid #dbe6fb; border-radius: 4px; padding: 0 4px; }
+.sm-body { padding: 6px; border-inline: 1px solid #5a7edc; }
+.sm-body button, .sm-foot button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; font-size: 12px; cursor: pointer; }
+.sm-body button:hover { background: #316ac5; color: #fff; }
+.sm-foot { display: flex; justify-content: flex-end; gap: 4px; padding: 5px; background: linear-gradient(#4a96f0, #1458c8); }
+.sm-foot button { width: auto; color: #fff; }
+.sm-foot button:hover { background: rgba(255,255,255,.25); }
+
+#taskbar { position: fixed; inset: auto 0 0 0; height: 30px; z-index: 1000; display: flex; align-items: stretch; background: linear-gradient(#245edb 0, #3f8cf3 6%, #245edb 12%, #245edb 88%, #1941a5 96%, #1941a5 100%); }
+#startBtn { display: flex; align-items: center; gap: 6px; padding: 0 22px 0 10px; border: 0; border-radius: 0 12px 12px 0; color: #fff; cursor: pointer; font: italic bold 18px Tahoma, sans-serif; text-shadow: 1px 1px 2px #164a0e; background: linear-gradient(#5db55d, #3a9a3a 15%, #2f8a2f 85%, #256f25); box-shadow: inset -2px 0 3px rgba(0,0,0,.35), inset 0 2px 2px rgba(255,255,255,.4); }
+#startBtn:hover { filter: brightness(1.1); }
+.sflag { width: 16px; height: 16px; background: conic-gradient(#f35325 0 25%, #81bc06 0 50%, #ffba08 0 75%, #05a6f0 0); border-radius: 3px; transform: rotate(-8deg); }
+#taskItems { flex: 1; display: flex; gap: 3px; padding: 2px 6px; align-items: center; }
+.taskbtn { width: 170px; height: 24px; border: 1px solid #0a3aa8; border-radius: 3px; color: #fff; text-align: left; padding: 0 8px; cursor: pointer; overflow: hidden; white-space: nowrap; background: linear-gradient(#3c81f3, #2a62d4); }
+.taskbtn.active { background: linear-gradient(#1e4eb8, #2a5dc9); box-shadow: inset 1px 1px 3px rgba(0,0,0,.5); }
+#tray { display: flex; align-items: center; padding: 0 12px; color: #fff; border-left: 1px solid #0b3a9a; background: linear-gradient(#0f8ee9, #1290e8 10%, #0c71d8 90%, #0a60bc); }
+
+@media (max-width: 1400px) {
+  .stats { grid-template-columns: repeat(3, 1fr); }
+  #nav { width: 180px; }
+}
+</style>
+</head>
+<body>
+
+  <div id="desktop">
+    <div class="icons">
+      <div class="dicon" id="iconUnity" tabindex="0"><span>🖥️</span>UNITY</div>
+      <div class="dicon" tabindex="0"><span>📁</span>My Documents</div>
+      <div class="dicon" tabindex="0"><span>🗑️</span>Recycle Bin</div>
+    </div>
+
+    <div id="appWindow" class="window hidden">
+      <div class="titlebar">
+        <span class="tt">🖥️ UNITY - Internet Cafe Management System</span>
+        <div class="tbtns">
+          <button class="tb" id="btnMin" title="Minimize">_</button>
+          <button class="tb" id="btnMax" title="Maximize">▢</button>
+          <button class="tb close" id="btnClose" title="Close">✕</button>
+        </div>
+      </div>
+      <div class="wbody appbody">
+        <div class="maincol">
+          <div class="searchbar">
+            <label for="searchBox">🔍 Search:</label>
+            <input id="searchBox" type="text" placeholder="Computer name or customer name..." autocomplete="off">
+            <button type="button" class="xp-btn sm" id="searchClear">Clear</button>
+          </div>
+          <main id="content"></main>
+        </div>
+        <aside id="nav">
+          <div class="logo small">
+            <div class="flag"><i></i><i></i><i></i><i></i></div>
+            <div class="lt"><span class="u">UNITY</span></div>
+          </div>
+          <div class="who" id="whoAmI"></div>
+          <button class="navbtn" data-view="home">🏠 Home Page</button>
+          <button class="navbtn" data-view="computers">💻 Computer Section</button>
+          <button class="navbtn" data-view="customers">👥 Customer Section</button>
+        </aside>
+      </div>
+      <div class="statusbar"><span id="sbLeft">Ready</span><span id="sbUser"></span></div>
+    </div>
+  </div>
+
+  <div id="modalRoot"></div>
+
+  <div id="startMenu" class="hidden">
+    <div class="sm-head"><span class="avatar">👤</span><b id="smUser">Guest</b></div>
+    <div class="sm-body">
+      <button data-sm="session">🕑 Start a Session</button>
+      <button data-sm="open">🖥️ UNITY</button>
+    </div>
+    <div class="sm-foot">
+      <button data-sm="logoff">🔑 Log Off</button>
+      <button data-sm="shutdown">⏻ Shut Down</button>
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <button id="startBtn"><i class="sflag"></i><b>start</b></button>
+    <div id="taskItems"></div>
+    <div id="tray"><span id="trayClock"></span></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
