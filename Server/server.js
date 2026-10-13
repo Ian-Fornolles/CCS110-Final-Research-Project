@@ -1,11 +1,13 @@
+require('dotenv').config();
+
 const express = require('express');
 const mysql = require('mysql2/promise');
 const path = require('path');
 const DB_CONFIG = {
   host: 'localhost',
-  user: 'root',
   port: 3306,
-  password: 'New_Apple10',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
   database: 'computerRentaldb',
   dateStrings: true,        // return DATETIME as 'YYYY-MM-DD HH:MM:SS' strings
   waitForConnections: true,
