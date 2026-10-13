@@ -1,0 +1,14 @@
+{
+  "name": "unity-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.7",
+    "express": "^4.19.2",
+    "git": "^0.1.5",
+    "mysql2": "^3.9.7"
+  }
+}
