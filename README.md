@@ -4,7 +4,9 @@ Runtime: Node.js
 Server: Node.js
 Frontend: HTML / CSS / JavaScript
 Project Structure
-.
+
+
+
 ├── Server/           # Backend code (routes, logic, etc.)
 ├── public/           # Static frontend files served to the browser
 ├── server.js         # Application entry point
