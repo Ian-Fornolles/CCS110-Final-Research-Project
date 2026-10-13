@@ -1,4 +1,3 @@
-
 const PRIMARY_KEYS = {
   customers: 'customer_id', computers: 'computer_id', staff: 'staff_id',
   sessions: 'session_id', billing: 'bill_id', reservation: 'reservation_id'
