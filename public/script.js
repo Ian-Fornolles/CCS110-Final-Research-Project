@@ -1,13 +1,10 @@
 /* ================= Config ================= */
-/* Table names double as the keys of `db`; columns use the exact database column names. */
 const PRIMARY_KEYS = {
   customers: 'customer_id', computers: 'computer_id', staff: 'staff_id',
   sessions: 'session_id', billing: 'bill_id', reservation: 'reservation_id'
 };
 
-/* ----- Currency: everything is stored and shown in Philippine Peso (PHP) ----- */
 const CURRENCY = '₱';
-
 const pesoFmt = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
 const round2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
@@ -20,8 +17,6 @@ const COMPUTER_TYPES = {
 };
 
 const VIEW_TITLES = { home: 'Home Page', computers: 'Computer Section', customers: 'Customer Section' };
-
-/* ================= State ================= */
 const accounts = {
   owner: { username: '', password: '', contact_number: '', email: '' },
   staff: { username: '', password: '', contact_number: '', email: '' }
@@ -30,7 +25,6 @@ const accounts = {
 const db = { customers: [], computers: [], staff: [], sessions: [], billing: [], reservation: [] };
 const app = { view: 'home', selectedComputer: null, user: null, role: null, staffId: null, ticks: 0, search: '' };
 
-/* Assign from the console, e.g. assignAccount('owner', 'boss', 'secret', '09171234567', 'boss@example.com') */
 function assignAccount(role, username, password, contact_number = '', email = '') {
   if (!accounts[role]) throw new Error('Role must be "owner" or "staff".');
   Object.assign(accounts[role], { username: String(username), password: String(password), contact_number: String(contact_number), email: String(email) });
@@ -56,14 +50,12 @@ const toDate = v => v instanceof Date ? v : new Date(String(v).replace(' ', 'T')
 const toSQL = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 const formatDateTime = v => v ? toDate(v).toLocaleString() : '—';
 
-/* reservation INT columns: reservation_date = YYYYMMDD, start_time / end_time = HHMM */
 const dateToInt = s => +s.replace(/-/g, '');
 const timeToInt = s => +s.replace(':', '');
 const dateIntToStr = d => `${Math.floor(d / 10000)}-${pad(Math.floor(d / 100) % 100)}-${pad(d % 100)}`;
 const timeIntToStr = t => `${pad(Math.floor(t / 100))}:${pad(t % 100)}`;
 const intToDate = (d, t) => new Date(Math.floor(d / 10000), Math.floor(d / 100) % 100 - 1, d % 100, Math.floor(t / 100), t % 100);
 
-/* Billing: hours_used DECIMAL(5,2), total_amount DECIMAL(10,2) -- all amounts are PHP, rounded to the centavo */
 const calcHours = (start, end) => Math.round((toDate(end) - toDate(start)) / 36000) / 100;
 const calcTotal = (hours, rate) => round2(hours * rate);
 
@@ -80,13 +72,11 @@ const customerTotal = id => round2(db.billing
   .filter(b => findSession(b.session_id)?.customer_id === id)
   .reduce((sum, b) => sum + b.total_amount, 0));
 
-/* ================= Database rows -> app format ================= */
 const asId = v => +v || 0;
 const asDateTime = v => { if (v == null || v === '') return null; const d = toDate(v); return isNaN(d) ? null : toSQL(d); };
 const asDateInt = v => +String(v ?? '').replace(/\D/g, '') || 0;
 const asTimeInt = v => { const s = String(v ?? ''); return s.includes(':') ? +s.split(':').slice(0, 2).join('') || 0 : +s || 0; };
 
-/* MySQL returns DECIMAL as strings and DATETIME as strings/ISO, so every row is converted here */
 const NORMALIZE = {
   customers: r => ({ customer_id: asId(r.customer_id), customer_name: r.customer_name ?? '', contact_number: r.contact_number ?? '', email: r.email ?? '', age: asId(r.age) }),
   computers: r => ({ computer_id: asId(r.computer_id), computer_type: r.computer_type ?? 'Standard', hourly_rate: +r.hourly_rate || 0, computer_status: r.computer_status ?? 'Available' }),
@@ -102,20 +92,17 @@ window.exportDatabase = () => JSON.parse(JSON.stringify(db));
 const normalize = s => String(s ?? '').toLowerCase();
 const searchQuery = () => app.search.trim();
 
-/* true when no search is active, or any of the texts contains the query */
 const matches = (...texts) => {
   const q = normalize(searchQuery());
   return !q || texts.some(t => normalize(t).includes(q));
 };
 
-/* names of customers currently using or holding a reservation on a computer */
 const customersOnComputer = id => [
   ...activeSessions().filter(s => s.computer_id === id).map(s => customerName(s.customer_id)),
   ...activeReservations().filter(r => r.computer_id === id).map(r => customerName(r.customer_id))
 ];
 const computerMatches = c => matches(computerName(c.computer_id), ...customersOnComputer(c.computer_id));
 
-/* escape text and wrap the matching part in <mark> */
 const hl = text => {
   const s = String(text ?? ''), q = searchQuery();
   const i = q ? s.toLowerCase().indexOf(q.toLowerCase()) : -1;
@@ -128,7 +115,6 @@ const createDefaultComputers = () => Object.entries({ Standard: 6, Gaming: 3, VI
   Array.from({ length: count }, () => ({ computer_type: type, hourly_rate: COMPUTER_TYPES[type].rate, computer_status: 'Available' }))
 ).map((pc, i) => ({ computer_id: i + 1, ...pc }));
 
-/* Load every table from MySQL (through the Node server) */
 async function loadFromServer() {
   try {
     const ctrl = new AbortController();
@@ -148,7 +134,6 @@ async function loadFromServer() {
   }
 }
 
-/* Saves are queued: only one request is in flight, and any changes made meanwhile are sent right after */
 let pushing = false, dirty = false;
 async function pushToServer() {
   if (pushing) { dirty = true; return; }
@@ -306,8 +291,6 @@ function validateForm(root, fields) {
   }
   return values;
 }
-
-/* onSubmit(values) may return false to keep the modal open */
 function formModal({ title, fields, values, width = 440, submitLabel = 'OK', onSubmit, intro = '' }) {
   const overlay = openModal({
     title, width,
@@ -563,8 +546,6 @@ function openReservationForm() {
   });
   $('.mbody', overlay).classList.add('cols');
 }
-
-/* Ending a session opens the bill: total = hours_used x hourly_rate (PHP), then the payment method is picked */
 function endSession(id) {
   const session = findSession(id);
   if (!session || session.end_time) return;
@@ -812,7 +793,6 @@ function openLoginModal() {
     { id: 'role', label: 'Log on as:', type: 'select', options: [['staff', 'Staff'], ['owner', 'Owner']] },
     { id: 'username', label: 'Username:', type: 'text', attrs: 'maxlength="40"', rule: required('Username') },
     { id: 'password', label: 'Password:', type: 'password', attrs: 'maxlength="60"', rule: required('Password') },
-    /* contact number and email are only asked when the account is being created */
     { id: 'contact_number', label: 'Contact Number:', type: 'tel', attrs: 'maxlength="20"',
       rule: (v, root) => accounts[val(root, 'role')].username ? true : rules.contact(v) },
     { id: 'email', label: 'Email Address:', type: 'text', attrs: 'maxlength="80"',
@@ -959,7 +939,6 @@ function wireEvents() {
 }
 
 /* ================= Boot ================= */
-/* No loading screen: the login box opens right away */
 const startBoot = () => openLoginModal();
 
 document.addEventListener('DOMContentLoaded', async () => {
