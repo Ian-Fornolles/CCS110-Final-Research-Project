@@ -1,11 +1,9 @@
-/* ================= Config ================= */
-/* Table names double as the keys of `db`; columns use the exact database column names. */
+
 const PRIMARY_KEYS = {
   customers: 'customer_id', computers: 'computer_id', staff: 'staff_id',
   sessions: 'session_id', billing: 'bill_id', reservation: 'reservation_id'
 };
 
-/* ----- Currency: everything is stored and shown in Philippine Peso (PHP) ----- */
 const CURRENCY = '₱';
 
 const pesoFmt = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
@@ -20,25 +18,18 @@ const COMPUTER_TYPES = {
 };
 
 const VIEW_TITLES = { home: 'Home Page', computers: 'Computer Section', customers: 'Customer Section' };
-
-/* ================= State ================= */
 const accounts = {
   owner: { username: '', password: '', contact_number: '', email: '' },
   staff: { username: '', password: '', contact_number: '', email: '' }
 };
-
 const db = { customers: [], computers: [], staff: [], sessions: [], billing: [], reservation: [] };
 const app = { view: 'home', selectedComputer: null, user: null, role: null, staffId: null, ticks: 0, search: '' };
-
-/* Assign from the console, e.g. assignAccount('owner', 'boss', 'secret', '09171234567', 'boss@example.com') */
 function assignAccount(role, username, password, contact_number = '', email = '') {
   if (!accounts[role]) throw new Error('Role must be "owner" or "staff".');
   Object.assign(accounts[role], { username: String(username), password: String(password), contact_number: String(contact_number), email: String(email) });
   return `Account assigned for ${role}`;
 }
 window.assignAccount = assignAccount;
-
-/* ================= Helpers ================= */
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -101,8 +92,6 @@ window.exportDatabase = () => JSON.parse(JSON.stringify(db));
 /* ================= Search ================= */
 const normalize = s => String(s ?? '').toLowerCase();
 const searchQuery = () => app.search.trim();
-
-/* true when no search is active, or any of the texts contains the query */
 const matches = (...texts) => {
   const q = normalize(searchQuery());
   return !q || texts.some(t => normalize(t).includes(q));
@@ -114,8 +103,6 @@ const customersOnComputer = id => [
   ...activeReservations().filter(r => r.computer_id === id).map(r => customerName(r.customer_id))
 ];
 const computerMatches = c => matches(computerName(c.computer_id), ...customersOnComputer(c.computer_id));
-
-/* escape text and wrap the matching part in <mark> */
 const hl = text => {
   const s = String(text ?? ''), q = searchQuery();
   const i = q ? s.toLowerCase().indexOf(q.toLowerCase()) : -1;
@@ -123,12 +110,11 @@ const hl = text => {
   return esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + q.length)) + '</mark>' + esc(s.slice(i + q.length));
 };
 
-/* ================= Storage (Node.js + MySQL via /api/data) ================= */
+/* ================= Storage ================= */
 const createDefaultComputers = () => Object.entries({ Standard: 6, Gaming: 3, VIP: 1 }).flatMap(([type, count]) =>
   Array.from({ length: count }, () => ({ computer_type: type, hourly_rate: COMPUTER_TYPES[type].rate, computer_status: 'Available' }))
 ).map((pc, i) => ({ computer_id: i + 1, ...pc }));
 
-/* Load every table from MySQL (through the Node server) */
 async function loadFromServer() {
   try {
     const ctrl = new AbortController();
@@ -148,7 +134,6 @@ async function loadFromServer() {
   }
 }
 
-/* Saves are queued: only one request is in flight, and any changes made meanwhile are sent right after */
 let pushing = false, dirty = false;
 async function pushToServer() {
   if (pushing) { dirty = true; return; }
@@ -176,7 +161,6 @@ function saveData() {
   pushToServer();
 }
 
-/* ================= Modals ================= */
 function openModal({ title, body, buttons = [], width = 420, cls = '' }) {
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
@@ -245,7 +229,6 @@ const confirmDialog = (title, text, onYes) => openModal({
   buttons: [{ label: 'Yes', primary: true, handler: onYes }, { label: 'No' }]
 });
 
-/* ================= Forms & Validation ================= */
 const required = label => v => v.trim() !== '' || `${label} is required.`;
 
 const rules = {
@@ -307,7 +290,6 @@ function validateForm(root, fields) {
   return values;
 }
 
-/* onSubmit(values) may return false to keep the modal open */
 function formModal({ title, fields, values, width = 440, submitLabel = 'OK', onSubmit, intro = '' }) {
   const overlay = openModal({
     title, width,
@@ -411,8 +393,6 @@ const addCustomer = v => {
   db.customers.push(customer);
   return customer;
 };
-
-/* a customer's current computer and session type come from their active session / reservation */
 const bookingOf = id => {
   const s = activeSessions().find(x => x.customer_id === id);
   if (s) return { computer: computerName(s.computer_id), type: 'Session Now' };
@@ -564,7 +544,6 @@ function openReservationForm() {
   $('.mbody', overlay).classList.add('cols');
 }
 
-/* Ending a session opens the bill: total = hours_used x hourly_rate (PHP), then the payment method is picked */
 function endSession(id) {
   const session = findSession(id);
   if (!session || session.end_time) return;
@@ -790,7 +769,6 @@ function tick() {
 }
 
 /* ================= Login / window control ================= */
-/* every logged-in user gets a row in `staff`, so billing.staff_id always points to someone */
 function ensureStaff(username, contact_number = '', email = '') {
   let person = db.staff.find(s => s.staff_name.toLowerCase() === username.toLowerCase());
   if (!person) {
@@ -812,7 +790,7 @@ function openLoginModal() {
     { id: 'role', label: 'Log on as:', type: 'select', options: [['staff', 'Staff'], ['owner', 'Owner']] },
     { id: 'username', label: 'Username:', type: 'text', attrs: 'maxlength="40"', rule: required('Username') },
     { id: 'password', label: 'Password:', type: 'password', attrs: 'maxlength="60"', rule: required('Password') },
-    /* contact number and email are only asked when the account is being created */
+    /* da contact number and email are only asked when the account is being created */
     { id: 'contact_number', label: 'Contact Number:', type: 'tel', attrs: 'maxlength="20"',
       rule: (v, root) => accounts[val(root, 'role')].username ? true : rules.contact(v) },
     { id: 'email', label: 'Email Address:', type: 'text', attrs: 'maxlength="80"',
@@ -959,7 +937,6 @@ function wireEvents() {
 }
 
 /* ================= Boot ================= */
-/* No loading screen: the login box opens right away */
 const startBoot = () => openLoginModal();
 
 document.addEventListener('DOMContentLoaded', async () => {
